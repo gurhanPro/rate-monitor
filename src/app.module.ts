@@ -4,7 +4,7 @@ import { RateService } from './service/rate.service';
 import { TelegramService } from './service/telegram.service';
 import { EcoCashQuote } from './Entity/EcoCashQuote';
 import { MamaMoneyQuote } from './Entity/MamaMoney';
-import { RatepController } from './controller/rate.controller';
+import { RateController } from './controller/rate.controller';
 import { Repository } from 'typeorm';
 import { Cache } from 'cache-manager';
 
@@ -12,6 +12,7 @@ import { AppConfigs } from './configs/app.configs'
 
 @Module({
   imports: [
+    CacheModule.register(),
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: AppConfigs.DATABASE_HOST,
@@ -25,7 +26,7 @@ import { AppConfigs } from './configs/app.configs'
     TypeOrmModule.forFeature([EcoCashQuote, MamaMoneyQuote]),
     CacheModule.register(),
   ],
-  controllers: [RatepController],
+  controllers: [RateController],
   providers: [
     RateService,
     TelegramService,

@@ -4,19 +4,20 @@ import { Cache } from 'cache-manager';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, Repository } from 'typeorm';
 import { getEcoCashRate } from './axios.service';
-import { EcoCashQuote } from 'src/Entity/EcoCashQuote';
-import { MamaMoneyQuote } from 'src/Entity/MamaMoney';
+import { EcoCashQuote } from '../Entity/EcoCashQuote';
+import { MamaMoneyQuote } from '../Entity/MamaMoney';
 import { TelegramService } from './telegram.service';
 
 
 @Injectable()
 export class RateService {
   constructor(
-    @InjectRepository(EcoCashQuote)
-    @InjectRepository(MamaMoneyQuote)
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
 
+    @InjectRepository(EcoCashQuote)
     private readonly ecoCashQuoteRepository: Repository<EcoCashQuote>,
+
+    @InjectRepository(MamaMoneyQuote)
     private readonly mamaMoneyQuoteRepository: Repository<MamaMoneyQuote>,
     private readonly telegramService: TelegramService,
 

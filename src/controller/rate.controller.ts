@@ -4,7 +4,7 @@ import { RateService } from 'src/service/rate.service';
 
 @Controller()
 @ApiTags('Rates')
-export class RatepController {
+export class RateController {
   constructor(private readonly rateService: RateService) {}
 
   @Get('/rate')
