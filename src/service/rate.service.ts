@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, CACHE_MANAGER, Inject } from '@nestjs/common';
+import { Injectable, NotFoundException, CACHE_MANAGER, Inject, Logger } from '@nestjs/common';
 import { Cache } from 'cache-manager';
 
 import { InjectRepository } from '@nestjs/typeorm';
@@ -11,6 +11,8 @@ import { TelegramService } from './telegram.service';
 
 @Injectable()
 export class RateService {
+  private readonly logger: Logger = new Logger(TelegramService.name);
+
   constructor(
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
 
@@ -23,7 +25,8 @@ export class RateService {
 
   ) {
     // Start monitoring the rate every minute when the service is created
-    setInterval(this.monitorEcoCashRate.bind(this), 60 * 1000);
+    setInterval(this.monitorEcoCashRate.bind(this), 20000);
+    // setInterval(this.monitorEcoCashRate.bind(this), 60 * 1000);
     // setInterval(this.monitorMamaMoneyRate.bind(this), 60 * 1000);
   }
 
@@ -78,29 +81,36 @@ export class RateService {
   }
   private async monitorEcoCashRate() {
     try {
+      this.logger.log('starting to monitor')
       // Call the endpoint that returns the rate
       const response = await getEcoCashRate(5000);
-      const newRate = response.data.rate;
+      // this.logger.log('current ecocash rate', response)
 
-      // Check if the rate is already cached
-      const cacheKey = 'ecoCashRate';
-      const cachedRate = await this.cacheManager.get(cacheKey);
-      if (cachedRate !== undefined && cachedRate === newRate) {
-        // Rate is already in cache, no further action needed
-        return;
-      }
+      // const newRate = response.data.rate;
 
-      // Update the cache with the new rate
-      await this.cacheManager.set(cacheKey, newRate);
+      // this.logger.log('new rate', newRate)
 
-      // Save the new quote to the database
-      const newQuote = new EcoCashQuote();
-      newQuote.rate = newRate;
-      await this.ecoCashQuoteRepository.save(newQuote);
+      // // Check if the rate is already cached
+      // const cacheKey = 'ecoCashRate';
+      // const cachedRate = await this.cacheManager.get(cacheKey);
+      // this.logger.log('cachedRate is ', cachedRate)
+      
+      // if (cachedRate !== undefined && cachedRate === newRate) {
+      //   // Rate is already in cache, no further action needed
+      //   return;
+      // }
 
-      // Send a Telegram notification
-      const message = `The rate has changed to ${newRate}.`;
-      await this.telegramService.sendEcoCashRateMessage('TELEGRAM_CHAT_ID', message);
+      // // Update the cache with the new rate
+      // await this.cacheManager.set(cacheKey, newRate);
+
+      // // Save the new quote to the database
+      // const newQuote = new EcoCashQuote();
+      // newQuote.rate = newRate;
+      // await this.ecoCashQuoteRepository.save(newQuote);
+
+      // // Send a Telegram notification
+      // const message = `The rate has changed to ${newRate}.`;
+      // await this.telegramService.sendEcoCashRateMessage('TELEGRAM_CHAT_ID', message);
     } catch (error) {
       console.error('Error monitoring rate:', error.message);
     }
