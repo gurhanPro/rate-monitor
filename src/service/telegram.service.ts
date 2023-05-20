@@ -10,7 +10,7 @@ export class TelegramService {
     this.bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
   }
 
-  async sendMessage(chatId: string, message: string): Promise<void> {
+  async sendEcoCashRateMessage(chatId: string, message: string): Promise<void> {
     try {
       await this.bot.telegram.sendMessage(chatId, message);
       this.logger.log(`Telegram message sent to ${chatId}`);

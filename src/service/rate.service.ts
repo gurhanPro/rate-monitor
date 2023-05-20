@@ -1,107 +1,107 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, CACHE_MANAGER, Inject } from '@nestjs/common';
+import { Cache } from 'cache-manager';
 
-// import { Rate } from './rate.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import axios from 'axios';
-import * as nodemailer from 'nodemailer';
-import { Telegraf } from 'telegraf';
+import { Between, Repository } from 'typeorm';
 import { getEcoCashRate } from './axios.service';
+import { EcoCashQuote } from 'src/Entity/EcoCashQuote';
+import { MamaMoneyQuote } from 'src/Entity/MamaMoney';
+import { TelegramService } from './telegram.service';
+
 
 @Injectable()
 export class RateService {
   constructor(
-    // @InjectRepository(Rate)
-    // private readonly rateRepository: Repository<Rate>,
+    @InjectRepository(EcoCashQuote)
+    @InjectRepository(MamaMoneyQuote)
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+
+    private readonly ecoCashQuoteRepository: Repository<EcoCashQuote>,
+    private readonly mamaMoneyQuoteRepository: Repository<MamaMoneyQuote>,
+    private readonly telegramService: TelegramService,
+
   ) {
     // Start monitoring the rate every minute when the service is created
-    // setInterval(this.monitorRate.bind(this), 60 * 1000);
+    setInterval(this.monitorEcoCashRate.bind(this), 60 * 1000);
+    // setInterval(this.monitorMamaMoneyRate.bind(this), 60 * 1000);
   }
 
-  // async getCurrentRate(): Promise<{ rate: number, timestamp: Date }> {
-  //   const latestRate = await this.rateRepository.findOne({
-  //     order: { timestamp: 'DESC' },
-  //   });
+  async getCurrentEcoCastRate(): Promise<any> {
+    const latestRate = await this.ecoCashQuoteRepository.findOne({
+      order: { created_at: 'DESC' },
+    });
 
-  //   if (!latestRate) {
-  //     throw new NotFoundException('No rates found');
-  //   }
+    if (!latestRate) {
+      throw new NotFoundException('No rates found');
+    }
+    return latestRate
+  }
 
-  //   return { rate: latestRate.rate, timestamp: latestRate.timestamp };
-  // }
+  async getCurrentMamaMoneyRate(): Promise<any> {
+    const latestRate = await this.mamaMoneyQuoteRepository.findOne({
+      order: { created_at: 'DESC' },
+    });
 
-  // async getTodayRates(): Promise<number[]> {
-  //   const todayRates = await this.rateRepository.find({
-  //     where: {
-  //       timestamp: new Date().toISOString().slice(0, 10),
-  //     },
-  //   });
+    if (!latestRate) {
+      throw new NotFoundException('No rates found');
+    }
+    return latestRate
+  }
 
-  //   if (todayRates.length === 0) {
-  //     throw new NotFoundException('No rates found for today');
-  //   }
+  async getTodayRates(): Promise<number[]> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set the time to the start of the day
 
-  //   return todayRates.map(rate => rate.rate);
-  // }
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1); // Set the time to the start of the next day
 
-  async getRata():Promise<any>{
+    const todayRates = await this.ecoCashQuoteRepository.find({
+      where: {
+        created_at: Between(today, tomorrow),
+      },
+    });
+
+    if (todayRates.length === 0) {
+      throw new NotFoundException('No rates found for today');
+    }
+
+    return todayRates.map((quote) => quote.rate);
+  }
+
+
+  async getRate(): Promise<any> {
     const response = await getEcoCashRate(5000);
     console.log(response.data);
-    
-    return response.data
+
+    return response.data;
   }
-  private async monitorRate() {
+  private async monitorEcoCashRate() {
     try {
       // Call the endpoint that returns the rate
-      const response = getEcoCashRate(5000);
-    
-      const newRate = response;
+      const response = await getEcoCashRate(5000);
+      const newRate = response.data.rate;
 
-      // Get the latest rate from the database
-      const latestRate = {rate: 2300}
-      //   const latestRate = await this.rateRepository.findOne({
-      //   order: { timestamp: 'DESC' },
-      // });
+      // Check if the rate is already cached
+      const cacheKey = 'ecoCashRate';
+      const cachedRate = await this.cacheManager.get(cacheKey);
+      if (cachedRate !== undefined && cachedRate === newRate) {
+        // Rate is already in cache, no further action needed
+        return;
+      }
 
-      // Check if the new rate is different from the latest rate in the database
-      // if (!latestRate || newRate !== latestRate.rate) {
-        // Save the new rate to the database
-        // await this.rateRepository.save({ rate: newRate });
+      // Update the cache with the new rate
+      await this.cacheManager.set(cacheKey, newRate);
 
-      //   // Send an email notification
-      //   const transporter = nodemailer.createTransport({
-      //     host: 'smtp.example.com',
-      //     port: 587,
-      //     auth: {
-      //       user: 'user@example.com',
-      //       pass: 'password',
-      //     },
-      //   });
+      // Save the new quote to the database
+      const newQuote = new EcoCashQuote();
+      newQuote.rate = newRate;
+      await this.ecoCashQuoteRepository.save(newQuote);
 
-      //   const mailOptions = {
-      //     from: 'sender@example.com',
-      //     to: 'recipient1@example.com, recipient2@example.com',
-      //     subject: 'Rate Change',
-      //     text: `The rate has changed to ${newRate}.`,
-      //   };
-
-      //   await transporter.sendMail(mailOptions);
-
-      //   // Send a Telegram notification
-      //   const bot = new Telegraf('TELEGRAM_BOT_TOKEN');
-
-      //   await bot.sendMessage('TELEGRAM_CHAT_ID', `The rate has changed to ${newRate}.`);
-      // }
+      // Send a Telegram notification
+      const message = `The rate has changed to ${newRate}.`;
+      await this.telegramService.sendEcoCashRateMessage('TELEGRAM_CHAT_ID', message);
     } catch (error) {
       console.error('Error monitoring rate:', error.message);
     }
   }
 }
-
-
-
-// how to telegram
-
-// create rds
-
-//

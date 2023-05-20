@@ -63,3 +63,34 @@ export async function getEcoCashRate(amount: number) {
     console.error(error);
   }
 }
+
+export async function getMamaMoneyRate() {
+  const url = 'https://api.mamamoney.co.za/mamamoney/mama/api/v1/doAPICall/offline';
+  const headers = {
+    'authority': 'api.mamamoney.co.za',
+    'accept': 'application/json',
+    'accept-language': 'en-US,en;q=0.6',
+    'content-type': 'application/json',
+    'origin': 'https://www.mamamoney.co.za',
+    'referer': 'https://www.mamamoney.co.za/',
+    'sec-fetch-dest': 'empty',
+    'sec-fetch-mode': 'cors',
+    'sec-fetch-site': 'same-site',
+    'sec-gpc': '1',
+    'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
+    'user-agent-app': 'WebsiteRequest',
+    'x-device-id': 'mamamoney.co.za',
+  };
+  const data = {
+    action: 'get_send_quote',
+    amount: 5000,
+    institution: 'SOM_DAHABSHIIL',
+  };
+
+  try {
+    const response = await axios.post(url, data, { headers });
+    console.log(response.data);
+  } catch (error) {
+    console.error(error.message);
+  }
+}

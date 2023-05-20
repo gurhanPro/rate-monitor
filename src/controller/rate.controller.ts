@@ -10,12 +10,12 @@ export class RatepController {
   @Get('/rate')
   @ApiOperation({ summary: 'Get the current rate' })
   async getCurrentRate(): Promise<any> {
-    return await this.rateService.getRata();
+    return await this.rateService.getRate();
   }
 
   @Get('/rates')
   @ApiOperation({ summary: 'Get the historical rates from today' })
   async getTodayRates(): Promise<number[]> {
-    return await this.rateService.getRata();
+    return await this.rateService.getRate();
   }
 }
