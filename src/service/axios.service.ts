@@ -1,8 +1,6 @@
 const axios = require('axios');
 
 export async function getEcoCashRate(amount: number) {
-  console.log('gettting eco cash rate');
-  
   try {
     const response = await axios.post("https://api.cassavaecocash.co.za/v3/calculate/", {
         data: {
@@ -60,11 +58,9 @@ export async function getEcoCashRate(amount: number) {
         referrerPolicy: "strict-origin-when-cross-origin",
         mode: "cors"
     });
-    console.log('got eco cash rate');
 
-    console.log(response.data.data.attributes);
+    console.log(response.data.data);
     
-
     return response.data.data.attributes;
   } catch (error) {
     console.error(error);

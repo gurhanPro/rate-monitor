@@ -7,11 +7,13 @@ import { getEcoCashRate } from './axios.service';
 import { EcoCashQuote } from '../Entity/EcoCashQuote';
 import { MamaMoneyQuote } from '../Entity/MamaMoney';
 import { TelegramService } from './telegram.service';
+import { Constants } from 'src/configs/app.constants';
+import { AppConfigs } from 'src/configs/app.configs';
 
 
 @Injectable()
 export class RateService {
-  private readonly logger: Logger = new Logger(TelegramService.name);
+  private readonly logger: Logger = new Logger(RateService.name);
 
   constructor(
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
@@ -25,7 +27,7 @@ export class RateService {
 
   ) {
     // Start monitoring the rate every minute when the service is created
-    setInterval(this.monitorEcoCashRate.bind(this), 20000);
+    setInterval(this.monitorEcoCashRate.bind(this), 300000);
     // setInterval(this.monitorEcoCashRate.bind(this), 60 * 1000);
     // setInterval(this.monitorMamaMoneyRate.bind(this), 60 * 1000);
   }
@@ -82,37 +84,67 @@ export class RateService {
   private async monitorEcoCashRate() {
     try {
       this.logger.log('starting to monitor')
-      // Call the endpoint that returns the rate
-      const response = await getEcoCashRate(5000);
-      // this.logger.log('current ecocash rate', response)
 
-      // const newRate = response.data.rate;
+      const freshlyFetchedRate = await getEcoCashRate(5000);
+      this.logger.log('FreshlyFetchedRate is: ', freshlyFetchedRate)
 
-      // this.logger.log('new rate', newRate)
 
-      // // Check if the rate is already cached
-      // const cacheKey = 'ecoCashRate';
-      // const cachedRate = await this.cacheManager.get(cacheKey);
-      // this.logger.log('cachedRate is ', cachedRate)
+      const cachedEcoCashRate: any = await this.cacheManager.get(Constants.CACHE_ECO_RATE_KEY)
+      this.logger.log('cachedEcoCashRate is ', cachedEcoCashRate)
+
+      if (cachedEcoCashRate && JSON.stringify(cachedEcoCashRate) === JSON.stringify(freshlyFetchedRate)) {
+        this.logger.log('Rate is already in cache, no further action needed', cachedEcoCashRate)
+        return;
+      }
+
+      this.logger.log('updating cache ')
+
+      await this.cacheManager.set(
+        Constants.CACHE_ECO_RATE_KEY, 
+        freshlyFetchedRate,
+        { ttl: Constants.DURABLE_CACHE_TTL }
+        )
+
+      const newQuote = new EcoCashQuote();
+
+      this.logger.log('saving new rate in db ')
+
+      this.setEntity(newQuote, freshlyFetchedRate);
+      await this.ecoCashQuoteRepository.save(newQuote);
+
+      this.logger.log('sending telegram notification')
+
+      const telegramMessage = {
+        'Amount to pay': `ZAR ${freshlyFetchedRate.amount_to_pay}`,
+        'Our transfer fees': `ZAR ${freshlyFetchedRate.amount_to_pay - freshlyFetchedRate.sending_amount}`,
+        'Beneficiary receives': `USD ${freshlyFetchedRate.recipient_amount}`,
+        'Rate': `Current rate 1 ZAR = ${Number((freshlyFetchedRate.rate)).toFixed(3)} USD, excluding transfer fees`,
+      }
       
-      // if (cachedRate !== undefined && cachedRate === newRate) {
-      //   // Rate is already in cache, no further action needed
-      //   return;
-      // }
+      // const message = `The rate has changed to:\n${JSON.stringify(telegramMessage, null, 2)}`;
+      let message = 'The rate has changed to:\n💰💰💰💰💰💰\n';
 
-      // // Update the cache with the new rate
-      // await this.cacheManager.set(cacheKey, newRate);
+Object.entries(telegramMessage).forEach(([key, value]) => {
+  message += `${key}: ${value}\n`;
+});
 
-      // // Save the new quote to the database
-      // const newQuote = new EcoCashQuote();
-      // newQuote.rate = newRate;
-      // await this.ecoCashQuoteRepository.save(newQuote);
-
-      // // Send a Telegram notification
-      // const message = `The rate has changed to ${newRate}.`;
-      // await this.telegramService.sendEcoCashRateMessage('TELEGRAM_CHAT_ID', message);
+      await this.telegramService.sendEcoCashRateMessage(AppConfigs.ECO_CASH_WATCH_CHAT_ID, message);
     } catch (error) {
       console.error('Error monitoring rate:', error.message);
     }
+  }
+
+  private setEntity(newQuote: EcoCashQuote, freshlyFetchedRate: any) {
+    newQuote.receive = freshlyFetchedRate.receive;
+    newQuote.sendingAmount = freshlyFetchedRate.sending_amount;
+    newQuote.recipientAmount = freshlyFetchedRate.recipient_amount;
+    newQuote.rate = freshlyFetchedRate.rate;
+    newQuote.reverseRate = freshlyFetchedRate.reverse_rate;
+    newQuote.fees = freshlyFetchedRate.fees;
+    newQuote.vat = freshlyFetchedRate.vat;
+    newQuote.sendingMinLimit = freshlyFetchedRate.sending_min_limit;
+    newQuote.sendingMaxLimit = freshlyFetchedRate.sending_max_limit;
+    newQuote.receivingMinLimit = freshlyFetchedRate.receiving_min_limit;
+    newQuote.receivingMaxLimit = freshlyFetchedRate.receiving_max_limit;
   }
 }

@@ -1,18 +1,32 @@
+import * as redisStore from 'cache-manager-redis-store';
+import { ClientOpts } from 'redis';
+import { RedisManager, RedisModule } from '@liaoliaots/nestjs-redis';
 import { Module, CacheModule, CACHE_MANAGER } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+
 import { RateService } from './service/rate.service';
 import { TelegramService } from './service/telegram.service';
 import { EcoCashQuote } from './Entity/EcoCashQuote';
 import { MamaMoneyQuote } from './Entity/MamaMoney';
 import { RateController } from './controller/rate.controller';
-import { Repository } from 'typeorm';
-import { Cache } from 'cache-manager';
-
-import { AppConfigs } from './configs/app.configs'
+import { AppConfigs } from './configs/app.configs';
 
 @Module({
   imports: [
-    CacheModule.register(),
+
+    CacheModule.register<ClientOpts>({
+      store: redisStore,
+      host: AppConfigs.REDIS_HOST,
+      port: AppConfigs.REDIS_PORT,
+      db: AppConfigs.REDIS_DB,
+    }),
+    RedisModule.forRoot({
+      config: {
+        host: AppConfigs.REDIS_HOST,
+        port: AppConfigs.REDIS_PORT,
+        db: AppConfigs.REDIS_DB,
+      },
+    }),
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: AppConfigs.DATABASE_HOST,
@@ -24,17 +38,11 @@ import { AppConfigs } from './configs/app.configs'
       entities: [EcoCashQuote, MamaMoneyQuote],
     }),
     TypeOrmModule.forFeature([EcoCashQuote, MamaMoneyQuote]),
-    CacheModule.register(),
   ],
   controllers: [RateController],
   providers: [
     RateService,
     TelegramService,
-
-    // {
-    //   provide: CACHE_MANAGER,
-    //   useClass: Cache,
-    // },
   ],
 })
 export class AppModule {}

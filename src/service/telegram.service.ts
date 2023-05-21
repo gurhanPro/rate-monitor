@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { AppConfigs } from 'src/configs/app.configs';
 import { Telegraf } from 'telegraf';
 
 @Injectable()
@@ -7,7 +8,7 @@ export class TelegramService {
   private readonly bot: Telegraf;
 
   constructor() {
-    this.bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
+    this.bot = new Telegraf(AppConfigs.ECO_TELEGRAM_BOT_TOKEN);
   }
 
   async sendEcoCashRateMessage(chatId: string, message: string): Promise<void> {
