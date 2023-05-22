@@ -27,7 +27,7 @@ export class RateService {
 
   ) {
     // Start monitoring the rate every minute when the service is created
-    setInterval(this.monitorEcoCashRate.bind(this), 300000);
+    setInterval(this.monitorEcoCashRate.bind(this), 1200000);
     // setInterval(this.monitorEcoCashRate.bind(this), 60 * 1000);
     // setInterval(this.monitorMamaMoneyRate.bind(this), 60 * 1000);
   }

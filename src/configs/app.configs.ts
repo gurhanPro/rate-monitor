@@ -15,4 +15,7 @@ export const AppConfigs = {
     ECO_TELEGRAM_BOT_TOKEN: process.env.ECO_TELEGRAM_BOT_TOKEN,
     ECO_CASH_CHAT_ID: process.env.ECO_CASH_CHAT_ID,
     ECO_CASH_WATCH_CHAT_ID: process.env.ECO_CASH_WATCH_CHAT_ID,
+    
+    APPLICATION_PORT: process.env.APPLICATION_PORT,
+    
 };

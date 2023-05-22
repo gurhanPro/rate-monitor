@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { AppConfigs } from './configs/app.configs';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -18,6 +19,6 @@ async function bootstrap() {
   // Add Swagger document to Swagger UI
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(9000);
+  await app.listen(AppConfigs.APPLICATION_PORT);
 }
 bootstrap();
