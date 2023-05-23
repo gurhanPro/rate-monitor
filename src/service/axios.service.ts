@@ -93,6 +93,8 @@ export async function getMamaMoneyRate() {
   try {
     const response = await axios.post(url, data, { headers });
     console.log(response.data);
+    console.log('root', response.data['response-object'].quote);
+    return response.data['response-object'].quote
   } catch (error) {
     console.error(error.message);
   }
