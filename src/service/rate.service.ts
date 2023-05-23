@@ -114,6 +114,7 @@ export class RateService {
       await this.mamaMoneyQuoteRepository.save(newQuote);
 
       this.logger.log('sending telegram notification')
+      const logoFileUrl = AppConfigs.MAMA_MONEY_LOGO_TELEGRAM_URL;
 
       const telegramMessage = [
         `You send ${freshlyFetchedRate['amount']} ZAR`,
@@ -124,13 +125,13 @@ export class RateService {
 
       ]
       // const message = `The rate has changed to:\n${JSON.stringify(telegramMessage, null, 2)}`;
-      let message = '👩👩👩👩👩👩👩👩👩👩👩👩\nMama rate has changed to:\n\n';
+      let message = '\nMama rate has changed to:\n\n';
 
       for(let k of telegramMessage){
         message += `${k}\n`;
       };
 
-      await this.telegramService.sendEcoCashRateMessage(AppConfigs.ECO_CASH_WATCH_CHAT_ID, message);
+      await this.telegramService.sendEcoCashRateMessage(AppConfigs.ECO_CASH_WATCH_CHAT_ID, message, logoFileUrl);
     } catch (error) {
       console.error('Error monitoring rate:', error.message);
     }
@@ -169,6 +170,8 @@ export class RateService {
 
       this.logger.log('sending telegram notification')
 
+      const logoFileUrl = AppConfigs.ECO_CASH_LOGO_TELEGRAM_URL;
+
       const telegramMessage = {
         'Amount to pay': `ZAR ${freshlyFetchedRate.amount_to_pay}`,
         'Our transfer fees': `ZAR ${freshlyFetchedRate.amount_to_pay - freshlyFetchedRate.sending_amount}`,
@@ -183,7 +186,7 @@ export class RateService {
         message += `${key}: ${value}\n`;
       });
 
-      await this.telegramService.sendEcoCashRateMessage(AppConfigs.ECO_CASH_WATCH_CHAT_ID, message);
+      await this.telegramService.sendEcoCashRateMessage(AppConfigs.ECO_CASH_WATCH_CHAT_ID, message, logoFileUrl);
     } catch (error) {
       console.error('Error monitoring rate:', error.message);
     }
