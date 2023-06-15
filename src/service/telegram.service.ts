@@ -14,8 +14,9 @@ export class TelegramService {
 
   async sendEcoCashRateMessage(chatId: string, message: string, photoUrl: string): Promise<void> {
     try {
-      const response = await axios.get(photoUrl, { responseType: 'stream' });
-      await this.bot.telegram.sendPhoto(chatId, { source: response.data }, { caption: message });
+      // const response = await axios.get(photoUrl, { responseType: 'stream' });
+      // await this.bot.telegram.sendPhoto(chatId, { source: response.data }, { caption: message });
+      await this.bot.telegram.sendMessage(chatId, message);
       this.logger.log(`Telegram message sent to ${chatId}`);
     } catch (error) {
       this.logger.error(`Error sending telegram message to ${chatId}: ${error}`);

@@ -26,9 +26,8 @@ export class RateService {
     private readonly telegramService: TelegramService,
 
   ) {
-    // Start monitoring the rate every minute when the service is created
-    setInterval(this.monitorEcoCashRate.bind(this), 300000);
-    setInterval(this.monitorMamaMoneyRate.bind(this), 300000);
+    setInterval(this.monitorEcoCashRate.bind(this), Constants.ECO_CASH_INTERVAL_IN_SECONDS * 1000);
+    setInterval(this.monitorMamaMoneyRate.bind(this), Constants.MAMA_MONEY_INTERVAL_IN_SECONDS * 1000);
   }
 
   async getCurrentEcoCastRate(): Promise<any> {
@@ -103,7 +102,7 @@ export class RateService {
       await this.cacheManager.set(
         Constants.CACHE_MAMA_MONEY_RATE_KEY,
         freshlyFetchedRate,
-        { ttl: Constants.DURABLE_CACHE_TTL }
+        { ttl: Constants.DURABLE_CACHE_TTL_IN_SECONDS }
       )
 
       const newQuote = new MamaMoneyQuote();
@@ -125,7 +124,7 @@ export class RateService {
 
       ]
       // const message = `The rate has changed to:\n${JSON.stringify(telegramMessage, null, 2)}`;
-      let message = '\nMama rate has changed to:\n\n';
+        let message = 'MAM MONEY RATE\n\ rate has changed to:\n\n';
 
       for(let k of telegramMessage){
         message += `${k}\n`;
@@ -158,7 +157,7 @@ export class RateService {
       await this.cacheManager.set(
         Constants.CACHE_ECO_RATE_KEY,
         freshlyFetchedRate,
-        { ttl: Constants.DURABLE_CACHE_TTL }
+        { ttl: Constants.DURABLE_CACHE_TTL_IN_SECONDS }
       )
 
       const newQuote = new EcoCashQuote();
@@ -180,7 +179,7 @@ export class RateService {
       }
 
       // const message = `The rate has changed to:\n${JSON.stringify(telegramMessage, null, 2)}`;
-      let message = 'The rate has changed to:\n💰💰💰💰💰💰\n';
+      let message = 'ECO-CASH RATE\nThe rate has changed to:\n💰💰💰💰💰💰\n';
 
       Object.entries(telegramMessage).forEach(([key, value]) => {
         message += `${key}: ${value}\n`;

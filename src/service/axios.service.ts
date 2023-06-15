@@ -58,9 +58,7 @@ export async function getEcoCashRate(amount: number) {
         referrerPolicy: "strict-origin-when-cross-origin",
         mode: "cors"
     });
-
-    console.log(response.data.data);
-    
+    // console.log(response.data.data);
     return response.data.data.attributes;
   } catch (error) {
     console.error(error);
@@ -92,8 +90,8 @@ export async function getMamaMoneyRate() {
 
   try {
     const response = await axios.post(url, data, { headers });
-    console.log(response.data);
-    console.log('root', response.data['response-object'].quote);
+    // console.log(response.data);
+    // console.log('root', response.data['response-object'].quote);
     return response.data['response-object'].quote
   } catch (error) {
     console.error(error.message);
