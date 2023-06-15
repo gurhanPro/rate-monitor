@@ -19,6 +19,6 @@ async function bootstrap() {
   // Add Swagger document to Swagger UI
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(AppConfigs.APPLICATION_PORT);
+  await app.listen(AppConfigs.APPLICATION_PORT, ()=>{console.log('started on port: ' + AppConfigs.APPLICATION_PORT)});
 }
 bootstrap();
