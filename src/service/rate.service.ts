@@ -52,7 +52,26 @@ export class RateService {
     return latestRate
   }
 
-  async getTodayRates(): Promise<number[]> {
+  async getTodayMamaMoneyRates(): Promise<any[]> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set the time to the start of the day
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1); // Set the time to the start of the next day
+
+    const todayRates = await this.mamaMoneyQuoteRepository.find({
+      where: {
+        created_at: Between(today, tomorrow),
+      },
+    });
+
+    if (todayRates.length === 0) {
+      throw new NotFoundException('No rates found for today');
+    }
+    return todayRates;
+  }
+
+  async getTodayEcoCashRates(): Promise<any[]> {
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Set the time to the start of the day
 
@@ -68,18 +87,21 @@ export class RateService {
     if (todayRates.length === 0) {
       throw new NotFoundException('No rates found for today');
     }
-
-    return todayRates.map((quote) => quote.rate);
+    return todayRates;
   }
 
 
-  async getRate(): Promise<any> {
+  async getEcoRate(): Promise<any> {
     const response = await getEcoCashRate(5000);
-    console.log(response.data);
-
-    return response.data;
+    console.log(response);
+    return response;
   }
 
+  async getMamaRate(): Promise<any> {
+    const response = await getMamaMoneyRate();
+    console.log(response);
+    return response;
+  }
 
   private async monitorMamaMoneyRate() {
     try {
