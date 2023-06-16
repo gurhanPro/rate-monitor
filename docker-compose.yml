@@ -7,13 +7,13 @@ services:
     env_file:
       - .env
 
-  app:
-    build: .
-    ports:
-      - '3000:3000'
-    depends_on:
-      - redis
-    env_file:
-      - .env
-    environment:
-      - REDIS_HOST=redis
+  # app:
+  #   build: .
+  #   ports:
+  #     - '3000:3000'
+  #   depends_on:
+  #     - redis
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - REDIS_HOST=redis
